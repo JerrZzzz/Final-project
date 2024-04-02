@@ -386,22 +386,16 @@ Weaknesses and next steps should also be included.
 
 ## Residual distribution check
 
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows...
-
 ```{r}
-#| eval: true
 #| echo: false
 #| message: false
 #| warning: false
 #| label: fig-residualplotmodel1
-#| layout-ncol: 2
 #| fig-cap: "Examining how first model fits using a residual plot"
 
 residuals_data <- data.frame(
-  Observation = 1:length(residuals(model2_11th)), # Creating an index for each observation
-  Residuals = residuals(model2_11th) # Extracting residuals
+  Observation = 1:length(residuals(q2_model)), # Creating an index for each observation
+  Residuals = residuals(q2_model) # Extracting residuals
 )
 
 model_1 <- ggplot(residuals_data, aes(x = Observation, y = Residuals)) +
@@ -410,25 +404,26 @@ model_1 <- ggplot(residuals_data, aes(x = Observation, y = Residuals)) +
   labs(y = "Residuals", x = "Observation") +
   theme_minimal() 
 
-model1_residuals <- data.frame(Residuals = residuals_q2)
+residuals_q2 <- residuals(q2_model)
 
 mean_residuals_q2 <- mean(residuals_q2)
 sd_residuals_q2 <- sd(residuals_q2)
 
+residuals_q2 <- data.frame(Residuals = residuals_q2)
 # Create the histogram and overlay the normal curve
-model1_distr <- ggplot(model1_residuals, aes(x = Residuals)) +
+model1_distr <- ggplot(residuals_q2, aes(x = Residuals)) +
   geom_histogram(aes(y = ..density..), bins = 20, fill = "lightblue", color = "black") +
   stat_function(fun = dnorm, args = list(mean = mean_residuals_q2, sd = sd_residuals_q2), color = "red") +
   labs(x = "Residuals", y = "Density", title = "Histogram of Residuals with Normal Curve") +
   theme_minimal()
 
-model1_qqplot <- ggplot(model1_residuals, aes(sample = Residuals)) +
+model1_qqplot <- ggplot(residuals_q2, aes(sample = Residuals)) +
   geom_qq() +
   geom_qq_line(color = "red") +
   labs(title = "QQ Plot of Residuals", x = "Theoretical Quantiles", y = "Sample Quantiles") +
   theme_minimal()
 
-slp <- ggplot(data.frame(Fitted=model2_11th$fitted.values, SqrtAbsResid=sqrt(abs(residuals(model2_11th)))), aes(x=Fitted, y=SqrtAbsResid)) +
+slp <- ggplot(data.frame(Fitted=q2_model$fitted.values, SqrtAbsResid=sqrt(abs(residuals(q2_model)))), aes(x=Fitted, y=SqrtAbsResid)) +
   geom_point() +
   geom_smooth(method="loess", se=FALSE) +
   labs(title="Scale-Location Plot", x="Fitted Values", y="Sqrt(Absolute Residuals)")
@@ -440,9 +435,9 @@ grid.arrange(model_1, model1_distr, model1_qqplot, slp, ncol = 2, nrow = 2)
 
 ## Diagnostics
 
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
+ is a trace plot. It shows... This suggests...
 
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
+ is a Rhat plot. It shows... This suggests...
 
 ```{r}
 #| echo: false
