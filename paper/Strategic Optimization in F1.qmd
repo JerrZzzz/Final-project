@@ -2,7 +2,7 @@
 title: "Strategic Optimization From Qualifying to Pole Position in Formula 1"
 subtitle: "An Analysis on Driver's Qualifying Lap Time for the Last 2 Decades (2006 - 2023)"
 author: Zhijun Zhong
-thanks: "Code and data are available at: LINK."
+thanks: "Code and data are available at https://github.com/JerrZzzz/Strategic-Optimization-in-F1."
 date: today
 date-format: long
 abstract: "In this study, I created predictive model from predicting the optimal lap time for Q2 eliminations that minimizes tire wear to using data from the first 2 round of the qualifying sessions to estimate the pole position lap time in the third qualifying round available in Kaggle. My finding revealed that it is possible to accurately estimate the pole position lap time and the optimal elimination time in the second qualifying. By using the predictive models, it can bring a better knowledge to teams and drivers on others while still own the ability to alter strategies in the following sessions. My aim is to be both competitive and preserving resources in qualifying in order to have the best outcome."
@@ -391,7 +391,7 @@ Weaknesses and next steps should also be included.
 #| message: false
 #| warning: false
 #| label: fig-residualplotmodel1
-#| fig-cap: "Examining how first model fits using a residual plot"
+#| fig-cap: "Examining how first model fits"
 
 residuals_data <- data.frame(
   Observation = 1:length(residuals(q2_model)), # Creating an index for each observation
@@ -431,6 +431,45 @@ slp <- ggplot(data.frame(Fitted=q2_model$fitted.values, SqrtAbsResid=sqrt(abs(re
 grid.arrange(model_1, model1_distr, model1_qqplot, slp, ncol = 2, nrow = 2)
 ```
 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-residualplotmodel2
+#| fig-cap: "Examining how second model fits"
+
+
+pole$residuals <- residuals(pole_model)
+
+# Plot residuals
+resi_plot <- ggplot(pole, aes(x = q3sec, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals of Linear Model", x = "Predicted Pole Position Time (sec)", y = "Residuals") +
+  theme_minimal()
+
+mean_residuals_pole <- mean(pole$residuals)
+sd_residuals_pole <- sd(pole$residuals)
+
+model2_distr <- ggplot(pole, aes(x = residuals)) +
+  geom_histogram(aes(y = ..density..), bins = 20, fill = "lightblue", color = "black") +
+  stat_function(fun = dnorm, args = list(mean = mean_residuals_pole, sd = sd_residuals_pole), color = "red") +
+  labs(x = "Residuals", y = "Density", title = "Histogram of Residuals with Normal Curve") +
+  theme_minimal()
+
+model2_qqplot <- ggplot(pole, aes(sample = residuals)) +
+  geom_qq() +
+  geom_qq_line(color = "red") +
+  labs(title = "QQ Plot of Residuals", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+slp_2 <- ggplot(data.frame(Fitted=pole_model$fitted.values, SqrtAbsResid=sqrt(abs(residuals(pole_model)))), aes(x=Fitted, y=SqrtAbsResid)) +
+  geom_point() +
+  geom_smooth(method="loess", se=FALSE) +
+  labs(title="Scale-Location Plot", x="Fitted Values", y="Sqrt(Absolute Residuals)")
+
+grid.arrange(resi_plot, model2_distr, model2_qqplot, slp_2, ncol = 2, nrow = 2)
+```
 
 
 ## Diagnostics
