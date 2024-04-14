@@ -25,12 +25,9 @@ kgl_auth(creds_file = "kaggle.json")
 response <- kgl_datasets_download_all(owner_dataset = "rohanrao/formula-1-world-championship-1950-2020")
 
 #### Save data ####
-download.file(response[["url"]], "data/temp.zip", mode="wb")
+download.file(response[["url"]], "data/temp.zip", mode = "wb")
 unzip_result <- unzip("data/temp.zip", exdir = "/cloud/project/data/raw_data/", overwrite = TRUE)
 
 # Remove unnecessary files
 file.remove("data/temp.zip")
 file.remove("kaggle.json")
-
-
-         

@@ -27,7 +27,7 @@ check_and_install_packages <- function(package_names) {
 }
 
 ## if not, install package 
-packages_needed <- c("ggplot2", "dplyr", "knitr", "janitor", "tidyverse", "lubridate", "readr", "gridExtra", "modelsummary", "broom", "broom.mixed", "stringr", "rstanarm", "jsonlite", "usethis", "devtools", "here") 
+packages_needed <- c("ggplot2", "dplyr", "knitr", "janitor", "tidyverse", "lubridate", "readr", "gridExtra", "modelsummary", "broom", "broom.mixed", "stringr", "rstanarm", "jsonlite", "usethis", "devtools", "here", "kableExtra") 
 check_and_install_packages(packages_needed)
 
 library(tidyverse)
@@ -37,6 +37,7 @@ library(jsonlite)
 library(usethis)
 library(readr)
 library(devtools)
+library(kableExtra)
 library(kaggler)
 library(ggplot2)
 library(knitr)
@@ -48,34 +49,69 @@ library(stringr)
 library(rstanarm)
 library(here)
 
-analysis_data <- read_csv("/cloud/project/data/analysis_data/verstappen_qualifying.csv")
-
-all_qual <- read_csv("/cloud/project/data/analysis_data/all_driver_qualifying.csv")
-
 qual2_11 <- read_csv("/cloud/project/data/analysis_data/qualifying2_11th.csv")
 
 pole <- read_csv("/cloud/project/data/analysis_data/poleprediction.csv")
 
 poletowin <- read_csv("/cloud/project/data/analysis_data/poletowin_rate.csv")
+
+poletowin2 <- read_csv("/cloud/project/data/analysis_data/poletowin2.csv")
 ```
 
 # Introduction
 
-Formula one had been the most advance and well-known auto sport around the world in the last few decades. We have witnessed the development of technology from the immense power of V12 to V6 engine to complex aerodynamics but have unlimited potential. Every single team on the grid have only one goal which is to win races and every single driver on the grid have only one aim which is to win Formula one driver world champion. Winning races in Formula one consists of skill, strategies, performances and luckiness. There are 15 to 20 Grand Prix every year taking place in all around of the globe. Every single one of the Grand Prix contain 3 practice sessions, 3 qualifying sessions and one big race session. Some people generally believe that only the race session matter in a Grand Prix since it is the only one which decide the points board. However, 3 qualifying sessions are equally important because it can directly decide the grid order. Dennis Wesselbaum and et al found in their research paper that the first grid position, AKA pole position, will give the driver an significant amount of advantage since the start of the race[@ppvalue]. They also found that there is about 10% increase in probability for a pole position driver to win the race[@ppvalue]. I decide to use a kaggle dataset published by Rohan Rao to build model and predict the lap time for second and third qualifying session[@f1dataset].
+Formula One has been the most advanced and well-known auto sport around the world in the last few decades. We have witnessed the development of technology from the immense power of V8 to V6 engine to complex aerodynamics but have unlimited potential. Every single team on the grid has only one goal which is to win races and every single driver on the grid has only one aim which is to win the Formula One driver world champion. Winning races in Formula One consists of skill, strategies, performances, and luckiness. There are 15 to 20 Grand Prix every year taking place all around the globe. Every single one of the Grand Prix contains 3 practice sessions, 3 qualifying sessions, and one big race session. 
 
-According to Formula 1 sporting regulations article 39.2[@f1_rules], the slowest 5 cars in first qualifying session, aka Q1, will be "prohibited" to take further part of the qualifying session. The slowest 5 cars in second qualifying session, aka Q2, will be "prohibited" to take further part of the qualifying session leaving 10 cars to the final qualifying session, aka Q3. Moreover, in article 30.2 [@f1_rules], there is only 13 sets of dry weather tyres for every Grand Prix including 8 sets of soft compound tyres, 3 sets of median compound tyres and 2 sets of hard compound tyres. The harder the tyre is the longer the tyre is going to last and the slower the lap time is. As A. Tremlett and D. Limebeer stated that tyre saving whilst optimal the lap time is considered as the most important strategy in formula 1[@tyrevalue]. The teams have to make choices on what tyre they should use in practice and qualifying sessions in order to make sure that there are enough tyres for them to change in race sessions. Thus, I think that it is the best to save tyre in the second session of the qualifying for the race. I created my first model to find the slowest estimated lap time to enter Q3. It means that any driver who can be quicker than this lap time will be able to enter Q3 using Q1 as the predictor. Therefore, driver can both save tyres and enter Q3 safely. Furthermore, I believe that compete for the pole position is every important in Q3 for all teams. Thus, I created another model to find the estimate pole position time using Q1 and Q2 as the predictor to estimate pole position lap time. After using the models, we found that there is a significant linear relationship between Q1 and Q2 which means that we can use a linear model on Q1 to estimate Q2. Moreover, pole position lap time mainly rely on Q2 rather than Q1, but we still need Q1 variable on the model.
+Some people generally believe that only the race session matters in a Grand Prix since it is the only one that decides the points board. However, 3 qualifying sessions are equally important because they can directly decide the grid order. Dennis Wesselbaum et al found in their research paper that the first grid position, AKA pole position, will give the driver a significant amount of advantage from the start of the race[@ppvalue]. They also found that there is about a 10% increase in the probability for a pole position driver to win the race[@ppvalue]. So, when we are watching Formula One races, we are not given the information about how quick the car can be around this circuit which is important information that they can use to make the qualifying sessions more interesting for viewers. Thus, I decided to use a Kaggle dataset published by Rohan Rao to build a model and predict the lap time for the second and third qualifying sessions [@f1dataset].
 
-The remainder of this paper is structured as follows. @sec-data is a section about the dataset I used in this paper. I carefully examined every variable of in the dataset and created graphs to visualize every variable. In @sec-model, I presented two significant models for estimating Q3 entering lap time and pole position lap time. I also explained the prediction of these models. @sec-results visualize these models with graphs which can be brought our understanding to a second level, While in the @sec-discussion, I thoroughly discussed the application of my models and further action to strengthening using other currently unavailable variables like weather conditions and tyre usage. Moreover, in the @sec-appendix, it consists graphic analyze on the quality of my models, description of data columns and so on. Finally, @sec-reference includes all resources I used in this paper.
+According to Formula 1 sporting regulations article 39.2[@f1_rules], the slowest 5 cars in the first qualifying session, aka Q1, will be "prohibited" from taking further part in the qualifying session. The slowest 5 cars in the second qualifying session, aka Q2, will be "prohibited" from taking further part of the qualifying session leaving 10 cars to the final qualifying session, aka Q3. 
+
+Moreover, in article 30.2 [@f1_rules], there are only 13 sets of dry weather tires for every Grand Prix including 8 sets of soft compound tires, 3 sets of median compound tires, and 2 sets of hard compound tires. The harder the tire is the longer the tire is going to last and the slower the lap time is. As A. Tremlett and D. Limebeer stated tire saving whilst optimal in the lap time is considered the most important strategy in Formula 1[@tyrevalue]. The teams must make choices on what tire they should use in practice and qualifying sessions in order to make sure that there are enough tires for them to change in race sessions. Thus, I think that it is best to save tire in the second session of the qualifying for the race. I created my first model to find the slowest estimated lap time to enter Q3. It means that any driver who can be quicker than this lap time will be able to enter Q3 using Q1 as the predictor. Therefore, drivers can both save tires and enter Q3 safely. 
+
+Furthermore, the competition for the pole position is very important in Q3 for all teams. Thus, I created another model to find the estimated pole position time using Q1 and Q2 as predictors to estimate pole position lap time. After using the models, we found that there is a significant linear relationship between Q1 and Q2 which means that we can use a linear model on Q1 to estimate Q2. Moreover, pole position lap time mainly relies on Q2 rather than Q1, but we still need Q1 variable on the model.
+
+The remainder of this paper is structured as follows. @sec-data is a section about the dataset I used in this paper. I carefully examined every variable of in the dataset and created graphs to visualize every variable. In @sec-model, I presented two significant models for estimating Q3 entering lap time and pole position lap time. I also explained the prediction of these models. @sec-results visualize these models with graphs which can bring our understanding to a second level, while in the @sec-discussion, I thoroughly discussed the application of my models and further action to strengthen using other currently unavailable variables like weather conditions and tire usage. Moreover, in the @sec-appendix, it consists of a graphic analysis of the quality of my models by using residual plots, qq-plots, and so on. Finally, @sec-reference includes all the resources and references I used in this paper.
+
 
 # Data {#sec-data}
 
 ## Data sources
 
-The data used in this paper is extracted from Kaggle created by Rohan Rao[@f1dataset]. This dataset is created with real formula 1 data from real races. It contained from every circuit which had a formula one race in history to every race in history. In this paper, I only used races dataset and qualifying dataset to perform the model. 
+The data used in this paper is extracted from Kaggle created by Rohan Rao[@f1dataset]. This dataset is created with real Formula One data from real races. It contained from every circuit which had a Formula One race in history to every race in history. In this paper, I only used the races dataset and qualifying dataset to perform the model. 
 
-This paper is entirely made with R program [@R] along with other packages which help me with graphing, table building and so on. I used tidyverse[@tidyverse], dplyr[@dplyr], knitr[@knitr] to clean data from original dataset. By using ggplot2[@ggplot2], modelsummary[@modelsummary], stringr[@stringr], rstanarm[@rstanarm], I am able to create the model and graph them. When I comes to downloading data for Kaggle, I used httr[@httr], jsonlite[@jsonlite], usethis[@usethis], devtools[@devtools], kaggler[@kaggler]. readr[@readr] helped me to read csv files to my workspace. Some other used package are listed, janitor[@janitor], lubridate[@lubridate], gridExtra[@gridExtra], here[@here]. 
+This paper is entirely made with the R program [@R] along with other packages which help me with graphing, table building, and so on. I used tidyverse[@tidyverse], dplyr[@dplyr], and knitr[@knitr] to clean data from the original dataset. By using ggplot2[@ggplot2], modelsummary[@modelsummary], stringr[@stringr], and rstanarm[@rstanarm], I am able to create the model and graph them. When it comes to downloading data for Kaggle, I used httr[@httr], jsonlite[@jsonlite], usethis[@usethis], devtools[@devtools], kaggler[@kaggler]. readr[@readr] helped me to read CSV files to my workspace. Some other used package are listed, janitor[@janitor], lubridate[@lubridate], gridExtra[@gridExtra], here[@here]. 
 
 ## Datasets
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| label: tbl-poletowin2
+
+poletowin3 <- poletowin2 %>%
+  rename(Position = position.y)
+
+kable(head(poletowin3), caption = "Probability of each qualifying position to winning grand prix", align = 'c')
+
+```
+
+The raw data contained a lot of datasets which are cross-referenced. For example, in drivers dataset, includes the detailed information of all drivers in Formula One history where each one of them is assigned to a driverId where we can use these driverId in later datasets without too much detail. In this way, it can effectively avoid oversizing one dataset, but it hardens our cleaning process. We combined the results dataset which includes all Grand Prix results and the qualifying dataset which contained all qualifying results in Formula One history. By combining them, we can count the number of different qualifying results which end up winning the Grand Prix. We are able to calculate the probability of each qualifying result that eventually wins the Grand Prix in @tbl-poletowin2. Moreover, if we combine races, qualifying and drivers dataset and calculate the percentage for a driver to secure pole position and then win the Grand Prix, we will be able to watch the pole-to-win rate for each driver in @tbl-poletowin.  
+
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| label: tbl-poletowin
+
+poletowinrate <- poletowin %>%
+  select(names, count, dual_victories, percentage)
+
+kable(head(poletowinrate), caption = "Dual Victory Rate for Each Driver", align = 'c')
+
+```
+
 
 ```{r}
 #| message: false
@@ -93,7 +129,7 @@ kable(p11, caption = "Q1 Position 11 vs Q2 Position 11 Lap Time", align = 'c')
 
 ```
 
-In race dataset, it contained the race information for every raceId. I can identify the year of the race which is very important to limited to recent races. In qualifying dataset, it consists of all the lap time for Q1 to Q3 for all races from 2006 to 2023. By using the qualifying dataset, I am able to create another dataset which involves the 11th fastest driver for Q1 and the 11th fastest driver in Q3. In this way, we are able to use the 11th fastest time in Q1 to predict the 11th fastest time in Q2(@tbl-p11). There are 341 observations in this dataset where raceId go from 1 to 1110 and lap time varies from 54 seconds a lap to 130 seconds a lap. Moreover, I deviated from the original dataset to create a new one where it records the total pole position a each driver have in their career and collect those number of races where they turn their pole position to a race win. So, I can use these information to calcuate the ratio of pole position to win for each driver. 
+In the race dataset, it contained the race information for every raceId. I can identify the year of the race which is very important to limited to recent races. In qualifying dataset, consists of all the lap times for Q1 to Q3 for all races from 2006 to 2023. However, the dataset only includes the position in the third qualifying meaning that the position for the first qualifying is not included. Thus, ordering the lap time for every race from the fastest to the lowest is necessary to identify the position for the first qualifying session. By using the qualifying dataset, I am able to create another dataset that involves the 11th fastest driver for Q1 and the 11th fastest driver in Q3. In this way, we can use the 11th fastest time in Q1 to predict the 11th fastest time in Q2(@tbl-p11). There are 341 observations in this dataset where raceId go from 1 to 1110 and lap time varies from 54 seconds a lap to 130 seconds a lap. Moreover, I deviated from the original dataset to create a new one that records the total pole position each driver has in their career and collects the number of races where they turn their pole position into a race win. So, I can use this information to calculate the ratio of pole position to win for each driver.
 
 ```{r}
 #| message: false
@@ -112,7 +148,7 @@ kable(explain_pole, caption = "Q1 fastest driver vs Q2 fastest driver vs Q3 fast
 
 ```
 
-By using the same technique, I also create a dataset to record the fastest time in Q1, Q2 and pole position time in @tbl-pole. There are in total of 340 observations in this dataset. Notice that I have changed the lap time of both dataset to a unit of second which will be easier to visualize the change in model section.
+By using the same technique, I also create a dataset to record the fastest time in Q1, Q2, and pole position time in @tbl-pole. There are in total of 340 observations in this dataset. Notice that I have changed the lap time of both datasets to a unit of seconds which will make it easier to visualize the change in the @sec-model.
 
 ## Visualizing Lap times
 
@@ -123,69 +159,79 @@ By using the same technique, I also create a dataset to record the fastest time 
 #| label: fig-pole_compare
 
 
-qual2_11_long <- pole %>%
-  select(q1sec, q2sec, q3sec) %>%
-  pivot_longer(
-    cols = c(q1sec, q2sec, q3sec),
-    names_to = "QualifyingRound",
-    values_to = "LapTimeSeconds"
+medians <- pole %>%
+  summarise(
+    MedianQ1 = median(q1sec, na.rm = TRUE),
+    MedianQ2 = median(q2sec, na.rm = TRUE),
+    MedianQ3 = median(q3sec, na.rm = TRUE)
   )
 
-qual2_11_long <- na.omit(qual2_11_long)
+# Calculate differences relative to Q1
+medians <- medians %>%
+  mutate(
+    DiffQ2 = MedianQ2 - MedianQ1,
+    DiffQ3 = MedianQ3 - MedianQ1
+  )
 
-# Create a combined boxplot
-combined_boxplot <- ggplot(qual2_11_long, aes(x = QualifyingRound, y = LapTimeSeconds)) +
-  geom_boxplot(aes(fill = QualifyingRound)) +
-  scale_fill_manual(values = c("q1sec" = "blue", "q2sec" = "red", "q3sec"="yellow")) +
+# Create a dataframe for plotting
+data_for_plot <- data.frame(
+  Round = c("Q2", "Q3"),
+  Difference = c(medians$DiffQ2, medians$DiffQ3)
+)
+
+# Plot the differences using histograms
+ggplot(data_for_plot, aes(x = Round, y = Difference, fill = Round)) +
+  geom_col() +
+  scale_fill_manual(values = c("Q2" = "red", "Q3" = "green")) +
   labs(
-    title = "Q1, Q2 and Q3 Lap Times (seconds) Distribution",
-    x = "",
-    y = "Lap Time (seconds)"
+    title = "Difference in Median Lap Times Relative to Q1",
+    x = "Qualifying Round",
+    y = "Median Time Difference (seconds)"
   ) +
   theme_minimal()
 
-combined_boxplot
-
 ```
 
-In order to take a close look at the distribution of the lap times, I created a box plot based on the q1, q2 and q3 lap times using the fastest driver from each qualifying session data(@tbl-pole). We can see that the difference of the distribution is not obvious. The distribution of the three sessions are very similar. Since that the lap time between Q1, Q2 and Q3 are very close, it is normal to see a very close pattern between 3 sessions. If we look closely, we can still see that the distribution of lap time in Q3 is a tiny little faster compare to other 2 sessions. 
+To take a close look at the distribution of the lap times, I created a histogram based on the median of q1, q2, and q3 lap times using the 10 fastest drivers from each qualifying session data(@tbl-pole). We can see that the difference in the distribution is obvious. On average, the driver in the second qualifying session is about 0.7 seconds faster than those in the first qualifying session. The gap is even bigger when it comes to the third qualifying session where it is close to 1 sec faster than those in Q1. 
+
+## Missing data 
+
+The first missing data type in our dataset observed as "na" represents any mechanical failure or personal issue where the driver is not able to do a valid lap within a specific time. So, we decided that we could drop this kind of missing data so that it would not lead to any form of bias towards our model. We notice that this kind of missing data is not common in our dataset because those drivers who are not able to do a valid lap will count as infinitely large lap time meaning that they will always be at the bottom of the grid. However, in the paper, we focused on the 11th fastest driver in the first qualifying and the 11th fastest driver in the second qualifying which will not involve those missing values. The second missing value type is observed as "\\N" which represents the eliminated driver's lap time in further qualifying sessions. If a driver had been eliminated in the first or second qualifying, we expect them not to take part in any further qualifying meaning they cannot have any lap time in these sessions. Thus, the author of the dataset decides to use "\\N" to represent those missing lap times. So, by this nature of the missing value, we believe that dropping them will not bias our model. 
 
 ## Similar datasets
 
-There are a lot of self made dataset in different statistical website like Kaggle where fans pull out the dataset all by themselves. I have done a lot of research and the dataset I used in this paper is by-far the most comprehensive and accurate. However, Formula one data are strictly limited to each team. Further information are confidential to team's own database. So, it is very hard for us to collect detailed information like tyre usage, car setup and engine output mode where these factors are crucial when we analyze specific lap times for pole position and so on. Since that the lack of those information, our predictions cannot be considered as accurate at a formula one team level. But it is sufficient for the use of television broadcast or building cliffhangers. 
+There are a lot of self-made datasets on different statistical websites like Kaggle where fans pull out the dataset all by themselves. I have done a lot of research and the dataset I used in this paper is by far the most comprehensive and accurate. However, Formula One data are strictly limited to each team. Further information is confidential to the team's database. So, it is very hard for us to collect detailed information like tire usage, car setup, and engine output mode where these factors are crucial when we analyze specific lap times for pole position and so on. Since the lack of that information, our predictions cannot be considered as accurate at a Formula One team level. But it is sufficient for the use of television broadcasts or building cliffhangers. 
 
 # Model {#sec-model}
 
-The two models shown in this section below aim to predict lap times using different predictors and different type of model to fit. This is motivated by the fact that more and more teams didn't take qualifying sessions seriously since that overtaking in race on track is easier and easier. Ending on top nowadays seems having smaller and smaller advantage to others. Thus, By creating these models, I want to raise the importance of qualifying sessions. After building models, I created different graphs to verify that the model that I build is a good fit to most observations in @sec-model-details includes residual plots and distribution, and qq-plots.  
+The two models shown in this section below aim to predict lap times using different predictors and different types of models to fit. This is motivated by the fact that more and more teams didn't take qualifying sessions seriously since overtaking in race on track is easier and easier. Ending on top nowadays seems to have a smaller and smaller advantage over others. Thus, By creating these models, I want to raise the importance of qualifying sessions. After building models, I created different graphs to verify that the model that I built is a good fit for most observations in @sec-model-details including residual plots and distribution, and qq-plots.  
 
 ## Model set-up
 
-I set up null hypothesis and alternative hypothesis to test if there is relationship between my predictor and response variable defined as following. I plan to use p-value to justify if we can reject null hypothesis. I plan to use p-value equal to 0.5 as a threshold where if p-value is below 0.5, then we can reject null hypothesis, and if p-value is above 0.5, then we do not have sufficient evidence to reject it meaning that if the p-value is above 0.5, the relationship between predictor and response variable are weak and vice versa. 
+I set up a null hypothesis and alternative hypothesis to test if there is a relationship between my predictor and response variable defined as follows. I plan to use the p-value to justify if we can reject the null hypothesis. I set a threshold of 0.5 where if the p-value is below 0.5, then we can reject the null hypothesis, and if the p-value is above 0.5, then we do not have sufficient evidence to reject it meaning that the relationship between predictor and response variable are weak and vice versa. 
 
 - Null Hypothesis: There is no relationship between X and Y, the model between X and Y does not have meaning. 
-- Alternative Hypothesis: There is strong relationship between X and Y, the model between X and Y can predict general cases.
+- Alternative Hypothesis: There is a strong relationship between X and Y, the model between X and Y can predict general cases.
 
-We can define our basic linear regression as @eq-reg1vli while we use coefficients $\beta_1$ to create slope for our linear regression line and $\beta_0$ to be the value of y when x is zero. We can also add a $x^2$ to create @eq-reg1vnon in order to make it as a non-linear model so that we can compare it to the linear model and choose a better fit on our model. Moreover, by adding a second variable $x_2$(@eq-reg2v), we can create a 3 dimensional linear model which we use 2 predictors to estimate the response variable. With the application of these equations, we can properly measure our estimated lap time for both second qualifying elimination and pole position. 
-
+We can define our basic linear regression as @eq-reg1vli while we use coefficients $\beta_1$ to create a slope for our linear regression line and $\beta_0$ to be the value of y when x is zero. We can also add a $x^2$ to create @eq-reg1vnon in order to make it a non-linear model so that we can compare it to the linear model and choose a better fit for our model. Moreover, by adding a second variable $x_2$(@eq-reg2v), we can create a 3-dimensional linear model in which we use 2 predictors to estimate the response variable. With the application of these equations, we can properly measure our estimated lap time for both second qualifying elimination and pole position. 
 
 $$
 y = \beta_0 + \beta_1 x + \epsilon
 $$ {#eq-reg1vli}
 
 $$
-y = \beta_0 + \beta_1 x + \epsilon
+y = \beta_0 + \beta_1 x + \beta_2 x^2+ \epsilon
 $$ {#eq-reg1vnon}
 
 $$
-y = \beta_0 + \beta_1 x + \epsilon
+y(x_1, x_2) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \epsilon
 $$ {#eq-reg2v}
 
+## Model Uncertainties 
+
+We used at most 2 variables in our models to estimate a complex situation. We believe that both models are oversimplified with only 2 variables to generalize all circumstances. It will cause high uncertainties and failure to estimate lap time precisely. As we further discussed in @sec-appendix, because of the lack of important variables, the model will prefer to over-estimate when predicting pole position lap time and under-estimate when predicting second qualifying elimination time. 
+
 # Results {#sec-results}
-
-
-
-
-
 
 ## Predict Q2 Elimination Time Model {#sec-model1result}
 
@@ -221,23 +267,23 @@ modelsummary::modelsummary(
 
 ```
 
-When I use the 11th fastest driver in qualifying 1 to predict the elimination time for Q2, I introduced a linear model and a nonlinear model. In @tbl-model1, the column on the left is the linear model while on the left is the nonlinear model. We define the linear model @eq-q2linear where $\beta_0 = 0.0723$ and $\beta_1 = 0.9937$. We define y as our response variable which is our estimate goal while x as our predictor which is the 11th fastest time in qualifying 1, and $\epsilon$ is a random error occur when there is variability in the response variable that isn't explained by our predictor or the randomness in the real data.
+When I used the 11th fastest driver in qualifying 1 to predict the elimination time for Q2, I introduced a linear model and a nonlinear model. In @tbl-model1, the column on the left is the linear model while on the left is the nonlinear model. We define the linear model @eq-q2linear where $\beta_0 = 0.0723$ and $\beta_1 = 0.9937$. We define y as our response variable which is our estimated goal while x as our predictor which is the 11th fastest time in qualifying 1, and $\epsilon$ is a random error that occurs when there is variability in the response variable that isn't explained by our predictor or the randomness in the real data.
 
 $$
 y = 0.0723 + 0.9937 x + \epsilon
 $$ {#eq-q2linear}
 
-The nonlinear model is defined by @eq-q2nonlinear where where $\beta_0 = 87.4653$, $\beta_1 = 207.4629$, and $\beta_2 = −0.1304$. So the full equation becomes @eq-q2nonlinear while x, y and $\epsilon$ is defined the same as above. 
+The nonlinear model is defined by @eq-q2nonlinear where where $\beta_0 = 87.4653$, $\beta_1 = 207.4629$, and $\beta_2 = −0.1304$. So the full equation becomes @eq-q2nonlinear while x, y, and $\epsilon$ are defined the same as above. 
 
 $$
 y = 87.4653 + 207.4629 x + −0.1304 x^2 + \epsilon
 $$ {#eq-q2nonlinear}
 
-As suggested in the table @tbl-model1, that any coefficients with 3 star behind it means that the p-value of this coefficient is smaller than 0.001. Any coefficient with p-value smaller than 0.001 suggest that there is very little chance of this coefficient to be zero. So in our model, the coefficient for the predictor as suggested with 3 stars tell us that the predictor will almost never be zero meaning that we can reject null hypothesis where there is no relationship between 11th fastest lap time in qualifying 1 and the elimination time. It is the same as the nonlinear model, where our predictor have p-value smaller than 0.001 suggesting strong relationship between 11th fastest lap time and elimination time. 
+As suggested in the table @tbl-model1, any coefficient with 3 stars behind it means that the p-value of this coefficient is smaller than 0.001. Any coefficient with a p-value smaller than 0.001 suggests that there is very little chance of this coefficient being zero. So in our model, the coefficient for the predictor as suggested with 3 stars tells us that the predictor will rarely be zero meaning that we can reject the null hypothesis where there is no relationship between the 11th fastest lap time in qualifying 1 and the elimination time. It is the same as the nonlinear model, where our predictor has a p-value smaller than 0.001 suggesting a strong relationship between the 11th fastest lap time and elimination time. 
 
-In @tbl-model1, the value for $R^2$ and adj$R^2$ are both 0.999 with a sample size of 306. $R^2$ and adj$R^2$ suggested the fit of the model on our data. It means that 99.9% of my observations can be explained by our model. Thus, it is a good fit for both linear model and nonlinear model. However, extreme high $R^2$ value often suggest lack of sample size or over-fitting. With a 306 sample size, we cannot conclude with a lack of sample size. In consideration of our qualifying 1 lap time in unit second, we expect $R^2$ value to be higher than normal since that the lap time difference are not significantly high often result in a 0.3 or a 0.5 second difference. So it is normal to have such high $R^2$ value because our prediction have to be accurate to the third decimal place. 
+In @tbl-model1, the value for $R^2$ and adj$R^2$ are both 0.999 with a sample size of 306. $R^2$ and adj$R^2$ suggested the fit of the model on our data. It means that 99.9% of my observations can be explained by our model. Thus, it is a good fit for both the linear model and the nonlinear model. However, an extremely high $R^2$ value often suggests a lack of sample size or over-fitting. With a 306 sample size, we cannot conclude with a lack of sample size. In consideration of our qualifying 1 lap time in unit second, we expect the $R^2$ value to be higher than normal since the lap time difference is not significantly high often resulting in a 0.3 or a 0.5-second difference. So it is normal to have such a high $R^2$ value because our prediction has to be accurate to the third decimal place. 
 
-We plan to compare two models using Bayesian Criterion and Akaike Criterion which is the AIC and BIC columns in @tbl-model1 to find a better fit. Generally, if the value of AIC and BIC are low, it indicated a better model. However, there are no scale to measure how good the model is. It is often apply on both model and compare which one is lower suggesting a good fit. In @tbl-model1, by comparing AIC and BIC, the difference is obvious suggesting linear model being a good fit. It matched the principle of model parsimony which stated that the all else being equal, the simple the model is the more complete the test of hypothesis is. So a linear model is what we prefer when it comes to predicting elimination time. 
+We plan to compare two models using Bayesian Criterion and Akaike Criterion which is the AIC and BIC columns in @tbl-model1 to find a better fit. Generally, if the value of AIC and BIC are low, it indicates a better model. However, there are no scales to measure how good the model is. It is often applied to both models and compares which one is lower suggesting a good fit. In @tbl-model1, by comparing AIC and BIC, the difference is obvious suggesting the linear model being a good fit. It matched the principle of model parsimony which stated that all else being equal, the simpler the model is the more complete the test of hypothesis is. So a linear model is what we prefer when it comes to predicting elimination time. 
 
 ```{r}
 #| echo: false
@@ -254,7 +300,7 @@ ggplot(qual2_11, aes(x = q1sec, y = q2sec)) +
   theme_minimal()
 ```
 
-After creating a figure on the model for predicting second qualifying elimination time, we found that the relationship between the 11th fastest time in qualifying 1 and the elimination time in Q2 are very strong. For every one second gain in Q1 time, we expect to get a 0.99 second gain in Q2 time. However, our prediction is not always accurate due to the track condition and so on. We can create a table to measure the uncertainty of our model in @tbl-uncer1. 
+After creating a figure on the model for predicting the second qualifying elimination time, we found that the relationship between the 11th fastest time in qualifying 1 and the elimination time in Q2 is very strong. For every one-second gain in Q1 time, we expect to get a 0.99-second gain in Q2 time. However, our prediction is not always accurate due to the track conditions and so on. We can create a table to measure the uncertainty of our model in @tbl-uncer1. 
 
 ```{r}
 #| echo: false
@@ -277,7 +323,7 @@ predictions_df$input = (new_data$q1sec)
 kable(predictions_df, caption = "Uncertainty Calculation on Model of Elimination Time for Q2", align = 'c')
 ```
 
-In this @tbl-uncer1, We have input a range of first qualifying time from 75 to 110 seconds. We discovered that the average uncertainty of predicted time is 0.572 seconds. It suggested that the all 95% of the points will lay in range of $\pm 0.572$ seconds. So our predicted Q2 elimination time can be various in a range of 1 second or more. However, the fit of our model is reasonable since most of the difference of the position 11th between Q1 and Q2 are usually 0.6. 
+In this @tbl-uncer1, We have input a range of first qualifying time from 75 to 110 seconds. We discovered that the average uncertainty of predicted time is 0.572 seconds. It suggested that all 95% of the points will lay in the range of $\pm 0.572$ seconds. So our predicted Q2 elimination time can be various in a range of 1 second or more. However, the fit of our model is reasonable since most of the differences of the position 11th between Q1 and Q2 are usually 0.6.
 
 \newpage
 
@@ -313,13 +359,13 @@ modelsummary::modelsummary(
 
 ```
 
-A more complex model in @tbl-model2 is used when we are trying to predict pole position time for every race where we used 2 variables both the fastest time in the first qualifying and the fastest time in the second qualifying. This model is defined as a multivariable @eq-pp where $\beta_0 = -0.0783$, $\beta_1 = -0.0541$, and $\beta_2 = 1.0529$. $x_2$ is our main variable we use to form the regression line which is the fastest lap time in second qualifying while $x_1$ is defined as the support variable to $x_2$ to adjust its position which is the fastest lap time in first qualifying session, and $\epsilon$ is the random error term representing the variability and real-life errors. 
+A more complex model in @tbl-model2 is used when we are trying to predict pole position time for every race where we used 2 variables both the fastest time in the first qualifying and the fastest time in the second qualifying. This model is defined as a multivariable @eq-pp where $\beta_0 = -0.0783$, $\beta_1 = -0.0541$, and $\beta_2 = 1.0529$. $x_2$ is the main variable we use to form the regression line which is the fastest lap time in the second qualifying while $x_1$ is defined as the support variable to $x_2$ to adjust its position which is the fastest lap time in the first qualifying session, and $\epsilon$ is the random error term representing the variability and real-life errors. 
 
 $$
 y(x_1, x_2) = -0.0783 + -0.0541 x_1 + 1.0529 x_2 + \epsilon
 $$ {#eq-pp}
 
-From model summary @tbl-model2, it suggest again like our first model that the $R^2$ and $R^2$Adj is very high at 99.8%. It means that 99.8% of our current data can be explained using this built model. With a sample size of 274, we cannot be confident that our sample size is big enough to prevent it from over-fitting. However, as mentioned above, we expect $R^2$ and $R^2$Adj to be big since the y scale is small. Moreover, 3 stars behind the coefficient of $x_2$ (fastest lap time in second qualifying) means its p-value is smaller than 0.001 which suggested a extremely weak possibility of it to be zero. It suggest a strong relationship between fastest lap time in second qualifying and our pole position time. However, there are no stars behind the coefficient of $x_1$ (fastest lap time in first qualifying session) showed us that the p-value is probably higher than 0.1 meaning there is a great chance it can be zero. Furthermore, the intercept row display no star meaning the intercept value can probably be zero. Thus, to sum up, this model do suggest that there is a linear relationship between Q1, Q2 time with pole position time. However, it also tells us that the relationship between the fastest lap time in the first qualifying are weak to the pole position lap time. From the p-value of the interception, we understand that when we achieve a very quick lap in the second qualifying, the pole position lap is still predicted as a fast lap. 
+From model summary @tbl-model2, it suggests again like our first model that the $R^2$ and $R^2$Adj are very high at 99.8%. It means that 99.8% of our current data can be explained using this built model. With a sample size of 274, we cannot be confident that our sample size is big enough to prevent it from over-fitting. However, as mentioned above, we expect $R^2$ and $R^2$Adj to be big since the y scale is small. Moreover, 3 stars behind the coefficient of $x_2$ (fastest lap time in second qualifying) mean its p-value is smaller than 0.001 which suggests an extremely weak possibility of it being zero. It suggests a strong relationship between the fastest lap time in second qualifying and our pole position time. However, there are no stars behind the coefficient of $x_1$ (fastest lap time in the first qualifying session) showed us that the p-value is probably higher than 0.1 meaning there is a great chance it can be zero. Furthermore, the intercept row displays no star meaning the intercept value can probably be zero. Thus, to sum up, this model does suggest that there is a linear relationship between Q1 and Q2 time with pole position time. However, it also tells us that the relationship between the fastest lap time in the first qualifying is weak to the pole position lap time. From the p-value of the interception, we understand that when we achieve a very quick lap in the second qualifying, the pole position lap is still predicted as a fast lap. 
 
 ```{r}
 #| echo: false
@@ -344,9 +390,50 @@ predictions_df1$inputq2 = (new_data1$q2sec)
 kable(predictions_df1, caption = "Uncertainty Calculation on Model of Pole Position", align = 'c')
 ```
 
-Since that the linear model for estimating pole position used 2 variables, it is very hard to visualize it in the paper, but we can still look at the uncertainties applied on this model. I have simulated same time for first qualifying as our first model @sec-model1result. I also assumed that the first position followed the same pattern discussed in the first model @sec-model1result. Comparing it to the model above, we can see that the range for my uncertainty goes from approximately $\pm 0.572$ to about  $\pm 1.00$. Even though that our first model is used to model 11th position lap time, it can also be possible to predict position 1. Thus, the uncertainty brought by multivariable model is significantly higher than a simple linear model in model 1 @tbl-uncer1. 
+Since the linear model for estimating pole position used 2 variables, it is very hard to visualize it in the paper, but we can still look at the uncertainties applied to this model. I have simulated the same time for the first qualifying as our first model @sec-model1result. I also assumed that the first position followed the same pattern discussed in the first model @sec-model1result. Comparing it to the model above, we can see that the range for my uncertainty goes from approximately $\pm 0.572$ to about  $\pm 1.00$. Even though that our first model is used to model the 11th position lap time, it can also be possible to predict position 1. Thus, the uncertainty brought by the multivariable model is significantly higher than a simple linear model in model 1 @tbl-uncer1. 
 
 # Discussion {#sec-discussion}
+
+As we discussed above, we expect to use the early sessions of qualifying to estimate both the elimination time for the second qualifying session and the pole position time. We found out that there is a positive correlation between the 11th-fastest driver in the first qualifying session and the 11th-fastest driver in the second qualifying session. Using our model in @sec-results, we are able to predict a time for a driver to beat in the second qualifying. The importance of knowing the elimination time is to minimize tire wear in order to save tires for the race session in the future. Moreover, we also created a model using the top driver in the first two sessions in qualifying to estimate the potential pole position time in the last session. By knowing this, drivers will have a much bigger motive for contention for the pole position. In the following discussion sessions, we will discuss deeper into the importance of both models and give weaknesses and future steps to strengthen our models. 
+
+## Analyzing Resource Management in Formula One
+
+In the world of Formula 1, the factor that determines success or failure is not only the speed of a designed race car but also the strategy that a team uses. There are a lot of examples in history that fast cars fail because of the use of strategy. It includes the tire usage, the pit stop timing, and so on. In a real race, a set of tires that had not been used before can be much faster than a set of tires that had been used for a few laps. The degradation happens when tires have to handle extreme conditions such as high-speed corners, heavy braking, and downforces which increases tire wear. Over some time, as the rubber heats and expands, it will lead to blistering, visibly deteriorating the tire's surface[@tyremanagements]. The degradation of the tire happens not only in races but also in qualifying where cars have to perform on the absolute limit of itself and increase the degradation level. 
+
+The tire usage in a modern Formula One race weekend is limited by rules for only 13 sets of dry tires can be used by each driver in each team including 8 sets of soft compound tires, 3 sets of medium compound tires, and 2 sets of hard compound tires [@f1_rules]. The softer compound of the tire is, the more grip a car can have meaning faster lap times. However, a race weekend contained 3 practice sessions for the team and driver to get familiar with the track, 3 qualifying sessions to determine the grid position for the race, and one race session to help the team score points. As rule 30.5(h) stated in F1 at the end of each practice session, the team has to return 2 sets of their tires to the manufacturer [@f1_rules]. It means that at the end of the third practice session, each team will have at most 7 sets of unused tires. Moreover, rule 30.5(h)(ii) suggested that each driver should always have 2 different compounds of tires by the start of the race. It restricts the team to return all the medium compound and hard compound tires before the race. Thus, a team can at most return 4 sets of medium or hard tires leaving at least one set of either medium or hard. As shown in @tbl-tyres, it demonstrates the strategy a team might use to manage the resources they have. The most commonly used strategy is the third one which gives a great variability on race strategy to any unforeseen situation that might arise in the race. Thus, we can see that for the third strategy, there is only one fresh soft tire for the driver to use in the third qualifying session. It means that drivers will only have one chance to get the best out of the car and compete with the rest of the grid. 
+
+
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-tyres
+#| warning: false
+
+
+tyre <- data.frame(
+  Sessions = c("Tyres left from Practice", "Q1", "Q2", "Q3", "race"), 
+  Tyre_strategy_1 = c("1M+5S", "1S", "1S", "2S", "1M+1S"),
+  Tyre_strategy_2 = c("1H+5S", "1S", "1S", "2S", "1H+1S"), 
+  Tyre_strategy_3 = c("1H+1M+4S", "1S", "1S", "1S", "1H+1M+1S")
+)
+
+kable(tyre, caption = "Qualifying tyre Usage Strategy", align = 'c') %>%
+  footnote(general = "S = Soft Tyre, M = Medium Tyre, H = Hard Tyre")
+```
+
+We discovered that minimizing our lap time in the second qualifying session is the optimal option for us. If we can save our tires in the second qualifying session, we will be able to have another set of soft tires that we can use in the third qualifying session in order to fight for the pole position, when our driver makes a mistake on his first lap which they can have a second attempt on fighting the pole position. If we use the driver's practice lap time to be the predictor to estimate the first qualifying session in order to achieve the same goal for minimizing tyre wear will have too many factors and uncertainties to address since a lot of the teams hide their true speed till the qualifying session. Thus, using the first qualifying lap times to predict the elimination time will bring a team various benefits not only in the third qualifying session but also in the race later. 
+
+## The Advantages of Securing a Pole Position
+
+Some people always consider the race as the key to success in Formula One. When we look at the structure of every race, we notice that only the ones who achieved in the top 10 score points for themselves and their team. However, it does not mean that the other sessions are not as important as the race itself. There are a lot of drivers in history disappointed when they are not able to have a good lap in a qualifying session especially when they are fighting for the pole position. The significance for us to build such a model to predict the time for pole position is not only to give the driver a better chance of winning points but also to have a great commercial value. 
+
+### The Correlation Between Pole Position and Race Wins
+
+When we look at a map of a circuit for Formula One, we can often see the grid position drawn as a white line at the start of the circuit. After the qualifying session, the fastest driver among the rest of the grid will start the race behind the first white line marking the pole position. Notice that the distance between the pole position and the second white line is small often within half to one car length designed to pack the cars together at the standing start of the race. However, even though the distance is small, in real races, it can have a big difference. Top motor racing drivers have the fastest reaction speed in the world. They will release the clutch within 0.2 seconds after the light went out meaning that the reaction speed is often smaller than 0.2 seconds. Let's use statistics to back up our argument. A Formula One car often travels from 0 to 100 in 2.6 seconds. If I am on pole position and react 0.1 seconds slower than the second car, when the time I get to 160km/h, I cover the distance of 53.42m, while the second car covers a distance of 57.78m resulting in a difference of 4.36m. However, 4.36m is about the same as a car's length which is the same as the difference between pole position and second position. Thus, it suggested that if I lost the pole position, I had to react 0.1 seconds faster than the pole position driver to get into the same start line as them till I accelerated to 160km/h. 
+
+Moreover, if we take a look at the rate for a driver to achieve pole position and eventually win the grand prix on @fig-poletowin, we will see that a lot of them have a percentage over 50% of it. It suggested that if a driver Secured the pole position, there was half a chance that they would win the race. For drivers like Max Verstappen, they have a staggeringly over 75% of pole-to-win rate meaning that there is almost no one able to win the Grand Prix if they won the pole position. If we disregard the drivers themselves, from 2006 to 2023, there are over 50% of all victories of the grand prix came from pole position in qualifying in @fig-poletowin2. 93% of all Grand Prix wins are born in the top 6 of the qualifying. Thus, we can conclude the higher position a driver achieves in qualifying will give the driver a better chance of winning the race, especially achieving the pole position. 
+
+In addition, different drivers will show different patterns of their performance under the high-pressure environment of qualifying, where milliseconds decide the grid positions. For instance, some drivers can be strong in the early sessions when the track is less crowded, allowing them to deliver strong lap times in less competitive environments while other drivers tend to perform under pressure in the third qualifying round, where the track is sticker and have a better grip. Thus, analyzing physiological data can illustrate how drivers' body figures, like adrenaline and heart rate, will impact their behaviors. Combining these personal elements into predictive models can improve the accuracy of estimating lap times and provide teams with personalized strategies for each driver’s unique strengths, where they can adapt to the driver's strengths and avoid their weak spots.
 
 ```{r}
 #| echo: false
@@ -364,15 +451,32 @@ ggplot(poletowin, aes(x = names, y = percentage)) +
   labs(x = "Driver Name", y = "Percentage", title = "From Pole Position to Win Ratio")
 ```
 
-## First discussion point {#sec-first-point}
+```{r}
+#| echo: false
+#| eval: true
+#| label: fig-poletowin2
+#| warning: false
 
-## Second discussion point
+ggplot(poletowin2, aes(x = "", y = Percentage, fill = factor(position.y))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  labs(fill = "Qualifying Position", title = "Percentage of Race Wins For Each Qualifying Position") +
+  scale_fill_brewer(palette = "Pastel1")
+```
 
-## Third discussion point
+
+### The Financial Implications of Achieving Pole Position
+
+Achieving pole position is not just a matter of prestige but also a significant financial advantage. Teams that secure the top spot on the grid benefit from increased exposure and visibility, which often translates into enhanced sponsorship opportunities. For modern Formula One races, not only the top 3 of the race winners have a podium celebration, but also a podium for those drivers who achieve the top 3 of the qualifying. All 3 drivers will be interviewed lively around the globe along with cars which filled with sponsorship. Thus, many sponsors gave their team a target to reach in order to keep the exposure and advertising them. This visibility is much more important for smaller teams than big teams where financial sponsorship and prize money are linked to race performance. A study by Loughborough University found out that the sponsors have more exposure to cars and the clothes drivers wear[@sponsorship]. It suggested that if a team wants more exposure on their car and driver, the most obvious way is to finish on a podium that gives the longest clip of the car, driver, and the team. Thus, pole positions and strategies are significant to achieve them. Moreover, for teams that achieve the constructor championship, FIA will present prizes to teams at the end of each season. The prizes are not fixed every year which depends on the total income of FIA. Moreover, for a team to improve their car performance for 0.1 seconds will cost them 10M dollars on average. It means that if we are able to accurately predict pole position time while keeping a good tire strategy using second qualifying elimination time, we are possible to save a lot of money and keep our car in the front of the grid while having a slower car. 
+
+Therefore, both models can bring the team a bigger chance of achieving a pole position which can result in a podium finish while giving the team the best strategy to compete in the following races and financial advantages. 
 
 ## Weaknesses and next steps
 
-Weaknesses and next steps should also be included.
+Even though there are a lot of advantages when we can predict lap time for second qualifying elimination and pole position, there are still a lot of weaknesses in our model and even in our paper. Although our original dataset contained a lot of information in F1, in order to predict the time precisely need more variables like weather information, and track temperatures to help us understand these underlying patterns behind the model. Moreover, we used qualifying information from 2006 to 2023 which is a long period. There are a lot of regulation changes during this period of time meaning that the car's performance is not accurate which we think it can cause bias when we use them. The results show that the uncertainty for our model is high. We also considered using a more recent period, but since there are only about 20 races each year, our model will not be properly trained with such a small sample size which will result in overfitting and bias when estimated with poor generalization. Moreover, the uncertainty we have discussed in the @sec-results is large. The uncertainty of 95% of our data points will lay in a range of $\pm 1$ second. It means that our prediction will have an uncertainty of 2 seconds. In a Formula One race, the difference is from the top of the grid to the bottom of the grid. So, our prediction here can only be used as entertainment rather than a precise lap time. In addition, the Eagest API website where Rohan Rao created the dataset from announce that they will stop updating after 2024 suggesting that the dataset will not be up to date since then. 
+
+Thus, our next step is to improve the dataset as much as we can. We can manually input the dataset for each race with specific track conditions, tire usage, weather, and so on in order to improve our model. We can also select a specific driver instead of selecting a period to help us avoid bias. In addition, using track conditions, weather, and tire can help us filter possible outliers in our dataset to improve it. We can also use the updated information for Eagest API in the future to test and further train our model to make it more precise. Therefore, by taking these steps, we are able to address the above weaknesses and improve our model. 
 
 \newpage
 
@@ -380,11 +484,13 @@ Weaknesses and next steps should also be included.
 
 # Appendix {#sec-appendix}
 
-# Additional data details
+This section provided further graphs to support the main aim of this research paper. It includes further detail on addressing the qualify of the model and any further experiments or data that provide additional contexts to the paper. 
 
 # Model details {#sec-model-details}
 
-## Residual distribution check
+In the following section, I will discuss the quality of my model by using residual plots, residual distribution plots, QQplots along with scale location plots. By analyzing these graphs, we are able to discuss the further action that need to be taken and how to address the issue with our model. 
+
+## Residual distribution check for estimating elimination time for second qualifying session
 
 ```{r}
 #| echo: false
@@ -431,6 +537,10 @@ slp <- ggplot(data.frame(Fitted=q2_model$fitted.values, SqrtAbsResid=sqrt(abs(re
 grid.arrange(model_1, model1_distr, model1_qqplot, slp, ncol = 2, nrow = 2)
 ```
 
+By fitting the residual plot on the top left corner of @fig-residualplotmodel1, we can see that all the points are randomly distributed along the y=0 line. It suggested that the residual for my data points is a good fit. However, we can see that the points below the red line have higher residuals than the points above the red line. Some of these points are potential outliers meaning that they should be removed, but because of the nature of our dataset where it lacks important variables like weather information. So removing potential outliers is very hard in these circumstances. Thus, we can say that our model here will tend to underestimate rather than overestimate. Moreover, from the qq plot and the residual distribution plot, we can see that they did not fit as a normal distribution meaning that there are higher residuals on one side of the fit creating a potential underestimate. In addition, for the scale location plot, we found out that the blue line should be a horizontal line representing a constant variance. However, a curved line represents a different variance across the fitted values. It suggested that a different model can be considered to fit the values. A more complex model should be used to address the issue here, but the lack of variables in our dataset shows an insufficient variable in building models. So further steps need to be taken to improve models. 
+
+## Residual distribution check for estimating pole position time for third qualifying session {#sec-res_modelcheck}
+
 ```{r}
 #| echo: false
 #| message: false
@@ -471,29 +581,7 @@ slp_2 <- ggplot(data.frame(Fitted=pole_model$fitted.values, SqrtAbsResid=sqrt(ab
 grid.arrange(resi_plot, model2_distr, model2_qqplot, slp_2, ncol = 2, nrow = 2)
 ```
 
-
-## Diagnostics
-
- is a trace plot. It shows... This suggests...
-
- is a Rhat plot. It shows... This suggests...
-
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-```
-
-```{r}
-
-```
-
+We can see that through this @fig-residualplotmodel2, the situation is the same as we mentioned above @sec-res_modelcheck. The residuals deviate to the overestimate side of the graph. Our model here tends to overestimate rather than underestimate in @sec-res_modelcheck. It suggested that there are more outliers where drivers do well in the second qualifying session and behave not so well in the third qualifying session. The reason behind this is that without critical information like weather and track conditions. It is very hard for us to clean the outliers. For those high residual points that can be considered to be influenced by weather factors, they should be removed from our model, but we took them into account which will affect the training of the model. For the scale location plot, the blue line suggested that the variation is not consistent over the fitted values. So same conclusion should be drawn as above where a more complex model can be fitted. 
 
 \newpage
 

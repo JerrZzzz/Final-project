@@ -21,48 +21,15 @@ library(kaggler)
 
 ## import datasets
 
-analysis_data <- read_csv("/cloud/project/data/analysis_data/verstappen_qualifying.csv")
-
-all_qual <- read_csv("/cloud/project/data/analysis_data/all_driver_qualifying.csv")
-
 qual2_11 <- read_csv("/cloud/project/data/analysis_data/qualifying2_11th.csv")
 
 pole <- read_csv("/cloud/project/data/analysis_data/poleprediction.csv")
 
-## Test data for max-verstappen perdiction
+recent_driver <- read_csv("/cloud/project/data/analysis_data/poletowin_rate.csv")
 
-### check q1sec q3sec column are all numbers 
+position_counts <- read_csv("/cloud/project/data/analysis_data/poletowin2.csv")
 
-is.numeric(analysis_data$q3sec)
-
-is.numeric(analysis_data$q1sec)
-
-### check driverId is 830 
-
-all(analysis_data$driverId == 830)
-
-## Test data for prediction of all driver in Q1 Q2 Q3 
-
-### check that q1 q2 q3 are all numbers
-
-all(is.numeric(all_qual$q1sec[!is.na(all_qual$q1sec)]))
-
-all(is.numeric(all_qual$q2sec[!is.na(all_qual$q2sec)]))
-
-all(is.numeric(all_qual$q3sec[!is.na(all_qual$q3sec)]))
-
-### check that there is at lost 10 driver take part in q3. 
-
-results <- all_qual %>%
-  group_by(raceId) %>%
-  summarize(num_numeric = sum(!is.na(q3sec) & q3sec == as.numeric(q3sec), na.rm = TRUE)) %>%
-  mutate(at_most_10_numeric = num_numeric <= 10)
-
-all_meet_criteria <- all(results$at_most_10_numeric)
-
-print(all_meet_criteria)
-
-## Test data for prediction on q2 elimination time 
+## Test data for prediction on q2 elimination time
 
 ### check that q1sec q2sec are all numbers
 
@@ -80,3 +47,42 @@ all(is.numeric(pole$q2sec[!is.na(pole$q2sec)]))
 
 all(is.numeric(pole$q3sec[!is.na(pole$q3sec)]))
 
+## Test data graph of pole to win rate
+
+### check that percentage are all numbers
+
+is_column_numeric <- is.numeric(recent_driver$percentage)
+
+is_column_numeric
+
+### check that all percentage are smaller than 100 
+
+are_all_numbers_and_less_than_100 <- all(suppressWarnings(!is.na(as.numeric(as.character(recent_driver$percentage)))) &
+                                           as.numeric(as.character(recent_driver$percentage)) < 100)
+are_all_numbers_and_less_than_100
+
+### Test that names are all strings 
+
+are_all_strings <- all(sapply(recent_driver$names, is.character))
+
+are_all_strings
+
+## Test data the pie graph of each pole how many win 
+
+### check percentage are all numbers 
+
+is_column_numeric_1 <- is.numeric(position_counts$Percentage)
+
+is_column_numeric_1
+
+### check percentage are smaller than 100 
+
+are_all_numbers_and_less_than_100_1 <- all(suppressWarnings(!is.na(as.numeric(as.character(position_counts$Percentage)))) &
+                                           as.numeric(as.character(position_counts$Percentage)) < 100)
+are_all_numbers_and_less_than_100_1
+
+### check if wins are all numbers 
+
+wins <- all(sapply(position_counts$Wins, is.numeric))
+
+wins
