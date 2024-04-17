@@ -151,3 +151,6 @@ saveRDS(
   file = "models/Q2non_model.rds"
 )
 
+# style code 
+
+style_file("/cloud/project/scripts/04-model.R")

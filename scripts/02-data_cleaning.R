@@ -266,3 +266,6 @@ write_parquet(combined, "/cloud/project/data/analysis_data/poleprediction.parque
 
 write_parquet(recent_driver, "/cloud/project/data/analysis_data/poletowin_rate.parquet")
 
+# Style code 
+
+style_file("/cloud/project/scripts/02-data_cleaning.R")

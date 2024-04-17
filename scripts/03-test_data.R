@@ -86,3 +86,7 @@ are_all_numbers_and_less_than_100_1
 wins <- all(sapply(position_counts$Wins, is.numeric))
 
 wins
+
+# style code 
+
+style_file("/cloud/project/scripts/03-test_data.R")

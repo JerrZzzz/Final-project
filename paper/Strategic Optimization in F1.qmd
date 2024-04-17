@@ -48,6 +48,7 @@ library(modelsummary)
 library(stringr)
 library(rstanarm)
 library(here)
+library(styler)
 
 qual2_11 <- read_csv("/cloud/project/data/analysis_data/qualifying2_11th.csv")
 
@@ -68,7 +69,7 @@ According to Formula 1 sporting regulations article 39.2[@f1_rules], the slowest
 
 Moreover, in article 30.2 [@f1_rules], there are only 13 sets of dry weather tires for every Grand Prix including 8 sets of soft compound tires, 3 sets of median compound tires, and 2 sets of hard compound tires. The harder the tire is the longer the tire is going to last and the slower the lap time is. As A. Tremlett and D. Limebeer stated tire saving whilst optimal in the lap time is considered the most important strategy in Formula 1[@tyrevalue]. The teams must make choices on what tire they should use in practice and qualifying sessions in order to make sure that there are enough tires for them to change in race sessions. Thus, I think that it is best to save tire in the second session of the qualifying for the race. I created my first model to find the slowest estimated lap time to enter Q3. It means that any driver who can be quicker than this lap time will be able to enter Q3 using Q1 as the predictor. Therefore, drivers can both save tires and enter Q3 safely. 
 
-Furthermore, the competition for the pole position is very important in Q3 for all teams. Thus, I created another model to find the estimated pole position time using Q1 and Q2 as predictors to estimate pole position lap time. After using the models, we found that there is a significant linear relationship between Q1 and Q2 which means that we can use a linear model on Q1 to estimate Q2. Moreover, pole position lap time mainly relies on Q2 rather than Q1, but we still need Q1 variable on the model.
+Furthermore, the competition for the pole position is very important in Q3 for all teams. Thus, I created another model to find the estimated pole position time using Q1 and Q2 as predictors to estimate pole position lap time. After using the models, we found that there is a significant linear relationship between Q1 and Q2 which means that we can use a linear model on Q1 to estimate Q2. Moreover, pole position lap time mainly relies on Q2 rather than Q1, but we still need Q1 variable on the model. Our analyze uses historical race data and statistical modeling techniques to estimate those, thereby providing valuable insights for race strategy optimization.
 
 The remainder of this paper is structured as follows. @sec-data is a section about the dataset I used in this paper. I carefully examined every variable of in the dataset and created graphs to visualize every variable. In @sec-model, I presented two significant models for estimating Q3 entering lap time and pole position lap time. I also explained the prediction of these models. @sec-results visualize these models with graphs which can bring our understanding to a second level, while in the @sec-discussion, I thoroughly discussed the application of my models and further action to strengthen using other currently unavailable variables like weather conditions and tire usage. Moreover, in the @sec-appendix, it consists of a graphic analysis of the quality of my models by using residual plots, qq-plots, and so on. Finally, @sec-reference includes all the resources and references I used in this paper.
 
@@ -79,7 +80,7 @@ The remainder of this paper is structured as follows. @sec-data is a section abo
 
 The data used in this paper is extracted from Kaggle created by Rohan Rao[@f1dataset]. This dataset is created with real Formula One data from real races. It contained from every circuit which had a Formula One race in history to every race in history. In this paper, I only used the races dataset and qualifying dataset to perform the model. 
 
-This paper is entirely made with the R program [@R] along with other packages which help me with graphing, table building, and so on. I used tidyverse[@tidyverse], dplyr[@dplyr], and knitr[@knitr] to clean data from the original dataset. By using ggplot2[@ggplot2], modelsummary[@modelsummary], stringr[@stringr], and rstanarm[@rstanarm], I am able to create the model and graph them. When it comes to downloading data for Kaggle, I used httr[@httr], jsonlite[@jsonlite], usethis[@usethis], devtools[@devtools], kaggler[@kaggler]. readr[@readr] helped me to read CSV files to my workspace. Some other used package are listed, janitor[@janitor], lubridate[@lubridate], gridExtra[@gridExtra], here[@here]. 
+This paper is entirely made with the R program [@R] along with other packages which help me with graphing, table building, and so on. I used tidyverse[@tidyverse], dplyr[@dplyr], and knitr[@knitr] to clean data from the original dataset. By using ggplot2[@ggplot2], modelsummary[@modelsummary], stringr[@stringr], and rstanarm[@rstanarm], I am able to create the model and graph them. When it comes to downloading data for Kaggle, I used httr[@httr], jsonlite[@jsonlite], usethis[@usethis], devtools[@devtools], kaggler[@kaggler]. readr[@readr] helped me to read CSV files to my workspace while styler styled my scripts[@styler]. Some other used package are listed, janitor[@janitor], lubridate[@lubridate], gridExtra[@gridExtra], here[@here]. 
 
 ## Datasets
 
@@ -149,6 +150,10 @@ kable(explain_pole, caption = "Q1 fastest driver vs Q2 fastest driver vs Q3 fast
 ```
 
 By using the same technique, I also create a dataset to record the fastest time in Q1, Q2, and pole position time in @tbl-pole. There are in total of 340 observations in this dataset. Notice that I have changed the lap time of both datasets to a unit of seconds which will make it easier to visualize the change in the @sec-model.
+
+## Measurements
+
+This dataset is intended to present users with detailed information about every race in F1 history including race details, driver details, and even lap time for every driver in the race. We mainly used the recorded lap time for drivers in qualifying for races from 2006 to 2023. Initially, the lap time detail is obtained by the high-quality sensors on the Formula One race car and presented to the audience on the live broadcast. Eagest API where Rohan Rao extracts the dataset from collects the data directly from it without manual error. The lap time is stored in a format of "minutes:seconds.milliseconds". We transfer the format into a seconds-only format where it is a numeric value that we can compare and apply model on it. The outliers happen when the weather changes in any of the 3 qualifying rounds making any rounds particularly slow or fast. Since significant variables like tire usage and weather are not included in the raw datasets, we are unable to clearly find the outliers in our dataset. We decide to use a 95% quantile of the difference between any 2 qualifying sessions to reduce the impact of weather information on our model. 
 
 ## Visualizing Lap times
 
@@ -296,7 +301,7 @@ We plan to compare two models using Bayesian Criterion and Akaike Criterion whic
 ggplot(qual2_11, aes(x = q1sec, y = q2sec)) +
   geom_point() + 
   geom_smooth(method = "lm", color = "skyblue") + 
-  labs(title = "Q1 vs Q2", x = "Q1 Time (sec)", y = "Q2 Time (sec)") +
+  labs(x = "Q1 Time (sec)", y = "Q2 Time (sec)") +
   theme_minimal()
 ```
 
@@ -324,8 +329,6 @@ kable(predictions_df, caption = "Uncertainty Calculation on Model of Elimination
 ```
 
 In this @tbl-uncer1, We have input a range of first qualifying time from 75 to 110 seconds. We discovered that the average uncertainty of predicted time is 0.572 seconds. It suggested that all 95% of the points will lay in the range of $\pm 0.572$ seconds. So our predicted Q2 elimination time can be various in a range of 1 second or more. However, the fit of our model is reasonable since most of the differences of the position 11th between Q1 and Q2 are usually 0.6.
-
-\newpage
 
 ## Predict Pole Position Time Model
 
@@ -390,7 +393,11 @@ predictions_df1$inputq2 = (new_data1$q2sec)
 kable(predictions_df1, caption = "Uncertainty Calculation on Model of Pole Position", align = 'c')
 ```
 
-Since the linear model for estimating pole position used 2 variables, it is very hard to visualize it in the paper, but we can still look at the uncertainties applied to this model. I have simulated the same time for the first qualifying as our first model @sec-model1result. I also assumed that the first position followed the same pattern discussed in the first model @sec-model1result. Comparing it to the model above, we can see that the range for my uncertainty goes from approximately $\pm 0.572$ to about  $\pm 1.00$. Even though that our first model is used to model the 11th position lap time, it can also be possible to predict position 1. Thus, the uncertainty brought by the multivariable model is significantly higher than a simple linear model in model 1 @tbl-uncer1. 
+Since the linear model for estimating pole position used 2 variables, it is very hard to visualize it in the paper, but we can still look at the uncertainties applied to this model. I have simulated the same time for the first qualifying as our first model @sec-model1result. I also assumed that the first position followed the same pattern discussed in the first model @sec-model1result. Comparing 
+
+\newpage
+
+it to the model above, we can see that the range for my uncertainty goes from approximately $\pm 0.572$ to about  $\pm 1.00$. Even though that our first model is used to model the 11th position lap time, it can also be possible to predict position 1. Thus, the uncertainty brought by the multivariable model is significantly higher than a simple linear model in model 1 @tbl-uncer1. 
 
 # Discussion {#sec-discussion}
 
@@ -448,7 +455,7 @@ poletowin <- poletowin %>%
 ggplot(poletowin, aes(x = names, y = percentage)) +
   geom_bar(stat = "identity", fill = "darkgreen") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Driver Name", y = "Percentage", title = "From Pole Position to Win Ratio")
+  labs(x = "Driver Name", y = "Percentage")
 ```
 
 ```{r}

@@ -31,3 +31,7 @@ unzip_result <- unzip("data/temp.zip", exdir = "/cloud/project/data/raw_data/", 
 # Remove unnecessary files
 file.remove("data/temp.zip")
 file.remove("kaggle.json")
+
+# style code 
+
+style_file("/cloud/project/scripts/01-download_data.R")

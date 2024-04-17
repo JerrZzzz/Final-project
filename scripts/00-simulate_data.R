@@ -48,3 +48,12 @@ for (race in 1:num_races) {
   q3_times <- q2_times[q3_drivers] - q3_improvement
   qualifying_results$q3_time[qualifying_results$race_id == race & qualifying_results$driver_id %in% q2_drivers[q3_drivers]] <- round(q3_times, 3)
 }
+
+# save csv 
+
+write_csv(qualifying_results, "/cloud/project/data/analysis_data/Simulation.csv")
+write_parquet(qualifying_results, "/cloud/project/data/analysis_data/Simulation.parquet")
+
+# Style file 
+
+style_file("/cloud/project/scripts/00-simulate_data.R")

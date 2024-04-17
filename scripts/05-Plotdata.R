@@ -15,8 +15,8 @@ check_and_install_packages <- function(package_names) {
   }
 }
 
-## if not, install package 
-packages_needed <- c("ggplot2", "dplyr", "knitr", "janitor", "tidyverse", "lubridate", "readr", "gridExtra", "modelsummary", "broom", "broom.mixed", "stringr", "rstanarm", "jsonlite", "usethis", "devtools", "here", "kableExtra") 
+## if not, install package
+packages_needed <- c("ggplot2", "dplyr", "knitr", "janitor", "tidyverse", "lubridate", "readr", "gridExtra", "modelsummary", "broom", "broom.mixed", "stringr", "rstanarm", "jsonlite", "usethis", "devtools", "here", "kableExtra")
 check_and_install_packages(packages_needed)
 
 library(tidyverse)
@@ -81,7 +81,7 @@ poletowin <- poletowin %>%
   mutate(names = reorder(names, -percentage))
 
 ggplot(poletowin, aes(x = names, y = percentage)) +
-  geom_bar(stat = "identity", fill = "darkgreen") + 
+  geom_bar(stat = "identity", fill = "darkgreen") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "Driver Name", y = "Percentage", title = "From Pole Position to Win Ratio")
 
@@ -92,3 +92,6 @@ ggplot(poletowin2, aes(x = "", y = Percentage, fill = factor(position.y))) +
   labs(fill = "Qualifying Position", title = "Percentage of Race Wins For Each Qualifying Position") +
   scale_fill_brewer(palette = "Pastel1")
 
+# style code
+
+style_file("/cloud/project/scripts/05-Plotdata.R")
