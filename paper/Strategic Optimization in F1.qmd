@@ -126,7 +126,7 @@ p11 <- data.frame(
   q2sec = c("Q2 11th fast driver lap time in Q2", "Range: 53.995-129.377", "85.504", "94.769", "95.975", "93.242")
 )
 
-kable(p11, caption = "Q1 Position 11 vs Q2 Position 11 Lap Time", align = 'c')
+kable(p11, caption = "Q1, Q2 11th Fastest Driver Lap Time in Seconds", align = 'c')
 
 ```
 
@@ -145,7 +145,7 @@ explain_pole <- data.frame(
   q3sec = c("Q3 fastest driver lap time in Q3", "Range: 53.377-125.591", "76.609", "86.720", "64.391", "71.365")
 )
 
-kable(explain_pole, caption = "Q1 fastest driver vs Q2 fastest driver vs Q3 fastest driver Lap Time", align = 'c')
+kable(explain_pole, caption = "Q1, Q2, and Q3 fastest driver Lap Time in Seconds", align = 'c')
 
 ```
 
@@ -189,7 +189,7 @@ ggplot(data_for_plot, aes(x = Round, y = Difference, fill = Round)) +
   geom_col() +
   scale_fill_manual(values = c("Q2" = "red", "Q3" = "green")) +
   labs(
-    title = "Difference in Median Lap Times Relative to Q1",
+    title = "Difference of Median Lap Times in Q2 and Q3 Relative to Q1",
     x = "Qualifying Round",
     y = "Median Time Difference (seconds)"
   ) +
@@ -257,7 +257,7 @@ q2non_model <-
 #| echo: false
 #| eval: true
 #| label: tbl-model1
-#| tbl-cap: "Model of Elimination Time for Q2"
+#| tbl-cap: "Model Summary of Elimination Time for Q2"
 #| warning: false
 
 modelsummary::modelsummary(
@@ -347,7 +347,7 @@ pole_model <-
 #| echo: false
 #| eval: true
 #| label: tbl-model2
-#| tbl-cap: "Model of Pole Position Time"
+#| tbl-cap: "Model Summary of Pole Position Time"
 #| warning: false
 
 modelsummary::modelsummary(
@@ -462,13 +462,14 @@ ggplot(poletowin, aes(x = names, y = percentage)) +
 #| echo: false
 #| eval: true
 #| label: fig-poletowin2
+#| fig-cap: "Percentage of Race Wins For Each Qualifying Position"
 #| warning: false
 
 ggplot(poletowin2, aes(x = "", y = Percentage, fill = factor(position.y))) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar(theta = "y") +
   theme_void() +
-  labs(fill = "Qualifying Position", title = "Percentage of Race Wins For Each Qualifying Position") +
+  labs(fill = "Qualifying Position") +
   scale_fill_brewer(palette = "Pastel1")
 ```
 
@@ -504,7 +505,7 @@ In the following section, I will discuss the quality of my model by using residu
 #| message: false
 #| warning: false
 #| label: fig-residualplotmodel1
-#| fig-cap: "Examining how first model fits"
+#| fig-cap: "Examining how model on Elimination time for Q2 fits"
 
 residuals_data <- data.frame(
   Observation = 1:length(residuals(q2_model)), # Creating an index for each observation
@@ -553,7 +554,7 @@ By fitting the residual plot on the top left corner of @fig-residualplotmodel1, 
 #| message: false
 #| warning: false
 #| label: fig-residualplotmodel2
-#| fig-cap: "Examining how second model fits"
+#| fig-cap: "Examining how model on Pole position lap time fits"
 
 
 pole$residuals <- residuals(pole_model)
